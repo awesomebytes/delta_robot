@@ -1,0 +1,15 @@
+<package>
+  <description brief="delta_robot">
+
+     Package that simulates our Delta robot and moves it.
+
+  </description>
+  <author>Sammy Pfeiffer and Toni Gabas</author>
+  <license>BSD</license>
+  <url>http://awesomebytes.com</url>
+  <depend package="rospy"/>
+  <depend package="visualization_msgs"/>
+
+</package>
+
+
