@@ -1,6 +1,6 @@
 import math
-# robot geometry
-e = 0.0    # end effector radius
+# robot geometry in mm
+e = 60.0    # end effector radius
 f = 240.0   # base radius (2x dynamixel to dynamixel distance)
 re = 200.0   # end to elbow dist
 rf = 80.0   # base to elbow dist
@@ -14,7 +14,7 @@ tan60 = sqrt3
 sin30 = 0.5
 tan30 = 1/sqrt3
  
-# forward kinematics: (theta1, theta2, theta3) -> (x0, y0, z0)
+# forward kinematics: (theta1, theta2, theta3) -> (x0, y0, z0) in meters
 # returned status: 0=OK, -1=non-existing position
 def delta_calcForward(theta1, theta2, theta3):
     t = (f-e)*tan30/2
@@ -62,11 +62,11 @@ def delta_calcForward(theta1, theta2, theta3):
     z0 = -0.5*(b+math.sqrt(d))/a
     x0 = (a1*z0 + b1)/dnm
     y0 = (a2*z0 + b2)/dnm
-    return (0, x0, y0, z0)
+    return (0, x0/1000.0, y0/1000.0, z0/1000.0 * -1)  # *-1 to obtain +Z
  
  
  # inverse kinematics
- # helper functions, calculates angle theta1 (for YZ-pane)
+ # helper functions, calculates angle theta1 (for YZ-pane) in degrees
 def delta_calcAngleYZ(x0, y0, z0):
     y1 = -0.5 * 0.57735 * f # f/2 * tg 30
     y0 -= 0.5 * 0.57735 * e # shift center to edge
@@ -77,24 +77,35 @@ def delta_calcAngleYZ(x0, y0, z0):
     d = -(a+b*y1)*(a+b*y1)+rf*(b*b*rf+rf)
     if d < 0:
         return (-1, 0) # non-existing point
-    yj = (y1 - a*b - math.sqrt(d))/(b*b + 1) # choosing outer point
+    yj = (y1 - a*b - (d**.5))/(b*b + 1) # choosing outer point
     zj = a + b*yj
-    theta = 180.0*math.atan(-zj/(y1 - yj))/pi + 180.0 if (yj>y1) else 0.0
+    #theta = 180.0*atan(-zj/(y1 - yj))/pi + ((yj>y1)?180.0:0.0)
+    if (yj>y1):
+        theta = 180.0*math.atan(-zj/(y1 - yj))/pi + 180.0
+    else:
+        theta = 180.0*math.atan(-zj/(y1 - yj))/pi + 0.0
     return (0, theta)
  
  
-# inverse kinematics: (x0, y0, z0) -> (theta1, theta2, theta3)
+# inverse kinematics: (x0, y0, z0) -> (theta1, theta2, theta3) in degrees
 # returned status: 0=OK, -1=non-existing position
 def delta_calcInverse(x0, y0, z0):
+     x0 *= 1000.0
+     y0 *= 1000.0
+     z0 *= 1000.0
      theta1 = theta2 = theta3 = 0.0
      status = delta_calcAngleYZ(x0, y0, z0)
-     if status[0] == 0: 
+
+     if status[0] == 0:
+         theta1 = status[1] 
          status = delta_calcAngleYZ(x0*cos120 + y0*sin120, y0*cos120-x0*sin120, z0)   #rotate coords to +120 deg
+
          if status[0] == 0:
                 theta2 = status[1]
      if status[0] == 0: 
          status = delta_calcAngleYZ(x0*cos120 - y0*sin120, y0*cos120+x0*sin120, z0)   #rotate coords to -120 deg
+
          if status[0] == 0:
                 theta3 = status[1]
-     return (status[0], theta1, theta2, theta3)
+     return (status[0], theta1*-1, theta2*-1, theta3*-1) # to be positive angles
  

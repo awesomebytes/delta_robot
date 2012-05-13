@@ -5,7 +5,7 @@ from geometry_msgs.msg import Point
 def create_delta_simulation():
     print "Creating simulation"
     markerArray = MarkerArray()
-    width = 0.005
+    width = 0.005 # 0.005
     
     
     # Point of first dynamixel
