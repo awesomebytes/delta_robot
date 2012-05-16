@@ -8,7 +8,7 @@ motor1:
     motor:
         id: 4
         init: 500
-        min: 0
+        min: 500
         max: 850
 
 motor2:
@@ -21,7 +21,7 @@ motor2:
     motor:
         id: 6
         init: 500
-        min: 0
+        min: 500
         max: 850
 
 
@@ -35,5 +35,5 @@ motor3:
     motor:
         id: 9
         init: 500
-        min: 0
+        min: 500
         max: 850

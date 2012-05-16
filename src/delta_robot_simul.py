@@ -13,6 +13,7 @@ import random
 
 
 
+
 def move_simulation_to_point(x, y, z, simulationMarkerArray):
     endpoint = Point(x, y, z)
     angles = delta_calcInverse(x, y, z)
