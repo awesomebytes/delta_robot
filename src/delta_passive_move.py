@@ -25,7 +25,7 @@ global initializedMarkerArray
 def move_simulation_to_point(x, y, z, simulationMarkerArray):
     endpoint = Point(x, y, z)
     angles = delta_calcInverse(x, y, z)
-    print angles
+    #print angles
 
 
 
