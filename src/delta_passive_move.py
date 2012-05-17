@@ -4,7 +4,7 @@ from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float64
-from dynamixel_msgs.msg import MotorState
+from dynamixel_msgs.msg import JointState
 import rospy
 import math
 from delta_construct import create_delta_simulation, set_initial_delta_pose
@@ -97,8 +97,8 @@ def callback_1(data):
     global motor3_pos
     global initializedMarkerArray
     # we move from 500 to 850 so we need to adapt the data (1023 is max pos)
-    motor1_pos = (data.position-500.0)/ 350.0 * 90.0
-    print "Motor1 in pos: %d" % (motor1_pos)
+    motor1_pos = math.degrees(data.current_pos)#-500.0)/ 350.0 * 90.0
+    #print "Motor1 in pos: %d" % (motor1_pos)
     posefinal = delta_calcForward(motor1_pos, motor2_pos, motor3_pos)
     initializedMarkerArray = move_simulation_to_point(posefinal[1], posefinal[2], posefinal[3], initializedMarkerArray)
     
@@ -109,8 +109,8 @@ def callback_2(data):
     global motor3_pos
     global initializedMarkerArray
     # we move from 500 to 850 so we need to adapt the data (1023 is max pos)
-    motor2_pos = (data.position-500.0)/ 350.0 * 90.0
-    print "Motor2 in pos: %d" % (motor2_pos)
+    motor2_pos = math.degrees(data.current_pos)#(data.position-500.0)/ 350.0 * 90.0
+    #print "Motor2 in pos: %d" % (motor2_pos)
     posefinal = delta_calcForward(motor1_pos, motor2_pos, motor3_pos)
     initializedMarkerArray = move_simulation_to_point(posefinal[1], posefinal[2], posefinal[3], initializedMarkerArray)
     
@@ -120,22 +120,22 @@ def callback_3(data):
     global motor3_pos
     global initializedMarkerArray
     # we move from 500 to 850 so we need to adapt the data (1023 is max pos)
-    motor3_pos = (data.position-500.0)/ 350.0 * 90.0
-    print "Motor3 in pos: %d" % (motor3_pos)
+    motor3_pos = math.degrees(data.current_pos)#(data.position-500.0)/ 350.0 * 90.0
+    #print "Motor3 in pos: %d" % (motor3_pos)
     posefinal = delta_calcForward(motor1_pos, motor2_pos, motor3_pos)
     initializedMarkerArray = move_simulation_to_point(posefinal[1], posefinal[2], posefinal[3], initializedMarkerArray)
 
 def motors_listener():
-    rospy.Subscriber('/motor1/status', MotorState, callback_1)
-    rospy.Subscriber('/motor2/status', MotorState, callback_2)
-    rospy.Subscriber('/motor3/status', MotorState, callback_3)
+    rospy.Subscriber('/motor1/state', JointState, callback_1)
+    rospy.Subscriber('/motor2/state', JointState, callback_2)
+    rospy.Subscriber('/motor3/state', JointState, callback_3)
     # set torque off in motors
-    pub1 = rospy.Publisher('/motor1/joint_torque_limit', Float64)
-    pub1.publish(Float64(0.0))
-    pub2 = rospy.Publisher('/motor2/joint_torque_limit', Float64)
-    pub2.publish(Float64(0.0))
-    pub3 = rospy.Publisher('/motor3/joint_torque_limit', Float64)
-    pub3.publish(Float64(0.0))
+#    pub1 = rospy.Publisher('/motor1/torque_enable', Float64)
+#    pub1.publish(Float64(0.0))
+#    pub2 = rospy.Publisher('/motor2/torque_enable', Float64)
+#    pub2.publish(Float64(0.0))
+#    pub3 = rospy.Publisher('/motor3/torque_enable', Float64)
+#    pub3.publish(Float64(0.0))
 
 
 topic = 'delta_simulation'

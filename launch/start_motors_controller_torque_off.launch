@@ -1,0 +1,13 @@
+<launch>
+    <!-- Start motor1 controller -->
+    <rosparam file="$(find delta_robot)/config/motors_torque_off.yaml" command="load"/>
+    <node name="motor_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+                --port=delta_port
+                --type=simple
+                motor1
+                motor2
+                motor3"
+          output="screen"/>
+
+</launch>
