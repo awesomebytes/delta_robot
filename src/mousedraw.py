@@ -31,29 +31,49 @@ import cv
 class MouseDraw(object):
     def __init__(self):
         cv2.namedWindow('CaptureMouse')
+        cv.MoveWindow('CaptureMouse', 0, 0)
         cv2.setMouseCallback('CaptureMouse', self.onmouse)
         self.drag_start = False
-        self.image = cv.LoadImageM("lena.jpg")
-
+        self.image = cv.LoadImageM("blank_800x800.jpg")
+        self.pointlist = []
+        
     def onmouse(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE and self.drag_start:
             print "Moving mouse!"
             x, y = np.int16([x, y]) # BUG
             print "( %d, %d) " % (x, y)
+            self.pointlist.append((x,y))
         if event == cv2.EVENT_LBUTTONDOWN:
             print " buttondown!"
+            print len(self.pointlist)
+            if len(self.pointlist) > 0:
+                self.pointlist = []
+                self.image = cv.LoadImageM("blank_800x800.jpg")
             self.drag_start = True
+            self.pointlist.append((x,y))
         if self.drag_start and event == cv2.EVENT_LBUTTONUP: 
             print " buttonup!"
             self.drag_start = False
+            self.pointlist.append((x,y))
 
     def run(self):
         while True:
+            #print self.pointlist
+            for i in range(0,len(self.pointlist)-1):
+                #print self.pointlist[i]
+                cv.Circle(self.image, self.pointlist[i], 1, (0, 0, 255))
+                
             cv.ShowImage('CaptureMouse', self.image)
 
             ch = cv2.waitKey(30)
-            if ch == 27 or ch == 1310819:
+            if ch == 27 or ch == 1310819 or ch == 1048603:
+                f = open('drawingpointlist.txt', 'w')
+                for i in range(0, len(self.pointlist)):
+                    f.write("" + str(self.pointlist[i][0]) + ","  + str(self.pointlist[i][1]) + "\n")
+                f.close()
+                cv.SaveImage('drawingimage.jpg',self.image)
                 break
+                
 
 if __name__ == '__main__':
     import sys
