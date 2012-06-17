@@ -21,75 +21,37 @@ global motor3_pos
 motor3_pos = 0
 global initializedMarkerArray
 
+global max_trail_points
+max_trail_points = 100
+global current_trail_point
+current_trail_point = 600
 
-#def move_simulation_to_point(x, y, z, simulationMarkerArray):
-#    endpoint = Point(x, y, z)
-#    angles = delta_calcInverse(x, y, z)
-#    #print angles
-#
-#
-#
-#    for m in simulationMarkerArray.markers:
-#        if m.id == 4: # from dyn1 to elbow1
-#            # For dyn1:
-#            # 0.051961524227, 0, 0
-#            # 0.051961524227 + 0.08, 0.0, 0.0
-#            pbase = (0.051961524227, 0, 0)
-#            pfinal = (0.051961524227 + 0.08, 0.0, 0.0)
-#            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
-#
-#            #rotate de the vector over an axis by some angle.
-#            e1 = (0,1,0) # over Y axis as dyn1 is over X axis
-#            # rotation_matrix( angle, reference axis, point=(optional))
-#            M = rotation_matrix(np.radians(angles[1]*-1), e1)
-#            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
-#            newendpoint = pbase + rotvecarrow
-#            # We got the new point
-#            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
-#            
-#        elif m.id == 5: # from dyn2 to elbow2
-#            # For dyn2:
-#            # -0.051961524227, -0.06, 0.0
-#            # -0.051961524227 - 0.056568542, -0.06 - 0.056568542, 0.0
-#            pbase = (-0.051961524227, -0.06, 0.0)
-#            pfinal = (-0.051961524227 - 0.056568542, -0.06 - 0.056568542, 0.0)
-#            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
-#            #rotate de the vector over an axis by some angle.
-#            e1 = (1,-1,0) # over its needed axis
-#            # rotation_matrix( angle, reference axis, point=(optional))
-#            M = rotation_matrix(np.radians(angles[2]*-1), e1)
-#            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
-#            newendpoint = pbase + rotvecarrow
-#            # We got the new point
-#            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
-#            
-#
-#        elif m.id == 6: # from dyn3 to elbow3
-#            # For dyn3:
-#            # -0.051961524227, 0.06, 0.0
-#            # -0.051961524227 - 0.056568542, 0.06 + 0.056568542, 0.0
-#            pbase = (-0.051961524227, 0.06, 0.0)
-#            pfinal = (-0.051961524227 - 0.056568542, 0.06 + 0.056568542, 0.0)
-#            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
-#            #rotate de the vector over an axis by some angle.
-#            e1 = (1,1,0) 
-#            # rotation_matrix( angle, reference axis, point=(optional))
-#            M = rotation_matrix(np.radians(angles[3]), e1)
-#            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
-#            newendpoint = pbase + rotvecarrow
-#            # We got the new point
-#            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
-#        elif m.id == 7: # from elbow1 to end
-#             m.points[0] = simulationMarkerArray.markers[3].points[1] # index is number -1
-#             m.points[1] = endpoint
-#        elif m.id == 8: # from elbow2 to end
-#             m.points[0] = simulationMarkerArray.markers[4].points[1]
-#             m.points[1] = endpoint
-#        elif m.id == 9: # from elbow3 to end
-#             m.points[0] = simulationMarkerArray.markers[5].points[1]
-#             m.points[1] = endpoint
-#
-#    return simulationMarkerArray
+def generate_last_visited_point(x, y, z):
+    global max_trail_points
+    global current_trail_point
+    
+    testpointscale = 0.005
+    testpoint = Marker()
+    testpoint.header.frame_id = "/map"
+    testpoint.type = testpoint.SPHERE
+    testpoint.action = testpoint.ADD
+    testpoint.scale.x = testpointscale
+    testpoint.scale.y = testpointscale
+    testpoint.scale.z = testpointscale
+    testpoint.color.a = 1.0
+    testpoint.color.r = 1.0
+    testpoint.color.g = 1.0
+    testpoint.color.b = 1.0
+    testpoint.pose.orientation.w = 1.0
+    testpoint.pose.position.x = x
+    testpoint.pose.position.y = y
+    testpoint.pose.position.z = z
+    testpoint.id = current_trail_point
+    current_trail_point += 1
+    if current_trail_point - 600 >= max_trail_points:
+        current_trail_point = 600
+    return testpoint
+
 
 def callback_1(data):
     global motor1_pos
@@ -101,7 +63,8 @@ def callback_1(data):
     #print "Motor1 in pos: %d" % (motor1_pos)
     posefinal = delta_calcForward(motor1_pos, motor2_pos, motor3_pos)
     initializedMarkerArray = move_simulation_to_point(posefinal[1], posefinal[2], posefinal[3], initializedMarkerArray)
-    
+    point = generate_last_visited_point(posefinal[1], posefinal[2], posefinal[3])
+    initializedMarkerArray.markers.append(point)
     
 def callback_2(data):
     global motor1_pos
@@ -113,6 +76,8 @@ def callback_2(data):
     #print "Motor2 in pos: %d" % (motor2_pos)
     posefinal = delta_calcForward(motor1_pos, motor2_pos, motor3_pos)
     initializedMarkerArray = move_simulation_to_point(posefinal[1], posefinal[2], posefinal[3], initializedMarkerArray)
+    point = generate_last_visited_point(posefinal[1], posefinal[2], posefinal[3])
+    initializedMarkerArray.markers.append(point)
     
 def callback_3(data):
     global motor1_pos
@@ -124,18 +89,14 @@ def callback_3(data):
     #print "Motor3 in pos: %d" % (motor3_pos)
     posefinal = delta_calcForward(motor1_pos, motor2_pos, motor3_pos)
     initializedMarkerArray = move_simulation_to_point(posefinal[1], posefinal[2], posefinal[3], initializedMarkerArray)
+    point = generate_last_visited_point(posefinal[1], posefinal[2], posefinal[3])
+    initializedMarkerArray.markers.append(point)
 
 def motors_listener():
     rospy.Subscriber('/motor1/state', JointState, callback_1)
     rospy.Subscriber('/motor2/state', JointState, callback_2)
     rospy.Subscriber('/motor3/state', JointState, callback_3)
-    # set torque off in motors
-#    pub1 = rospy.Publisher('/motor1/torque_enable', Float64)
-#    pub1.publish(Float64(0.0))
-#    pub2 = rospy.Publisher('/motor2/torque_enable', Float64)
-#    pub2.publish(Float64(0.0))
-#    pub3 = rospy.Publisher('/motor3/torque_enable', Float64)
-#    pub3.publish(Float64(0.0))
+
 
 
 topic = 'delta_simulation'
