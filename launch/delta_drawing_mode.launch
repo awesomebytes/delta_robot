@@ -1,0 +1,28 @@
+<launch>
+    <!-- Start the low-level driver manager with parameters -->
+    <node name="ttyUSB0_manager" pkg="dynamixel_controllers" type="controller_manager.py" output="screen">
+        <rosparam>
+            namespace: dxl_manager
+            serial_ports:
+                delta_port:
+                    port_name: "/dev/ttyUSB0"
+                    baud_rate: 1000000
+                    min_motor_id: 4
+                    max_motor_id: 9
+                    update_rate: 20
+        </rosparam>
+    </node>
+    <!-- Start motor1 controller -->
+    <rosparam file="$(find delta_robot)/config/motors.yaml" command="load"/>
+    <node name="motor_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+                --port=delta_port
+                --type=simple
+                motor1
+                motor2
+                motor3"
+          output="screen"/>
+          
+     <node name="delta_passive" pkg="delta_robot" type="delta_robot_drawing.py" />
+    
+</launch>
