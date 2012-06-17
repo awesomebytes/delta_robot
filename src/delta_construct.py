@@ -1,6 +1,12 @@
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import Point
+from delta_kinematics import *
+from math import *
+from transformations import *
+import numpy as np
+
+
 
 def create_delta_simulation():
     print "Creating simulation"
@@ -21,8 +27,8 @@ def create_delta_simulation():
     base1.color.g = 0.0
     base1.color.b = 0.0
     base1.pose.orientation.w = 1.0
-    base1.pose.position.x = 0.051961524227
-    base1.pose.position.y = 0
+    base1.pose.position.x = 0
+    base1.pose.position.y = - 0.06 * sqrt(2)
     base1.pose.position.z = 0
     base1.id = 1
     
@@ -39,8 +45,8 @@ def create_delta_simulation():
     base2.color.g = 1.0
     base2.color.b = 0.0
     base2.pose.orientation.w = 1.0
-    base2.pose.position.x = -0.051961524227
-    base2.pose.position.y = -0.06
+    base2.pose.position.x = 0.06
+    base2.pose.position.y = 0.06
     base2.pose.position.z = 0
     base2.id = 2
     
@@ -57,7 +63,7 @@ def create_delta_simulation():
     base3.color.g = 0.0
     base3.color.b = 1.0
     base3.pose.orientation.w = 1.0
-    base3.pose.position.x = -0.051961524227
+    base3.pose.position.x = - 0.06 
     base3.pose.position.y = 0.06
     base3.pose.position.z = 0
     base3.id = 3
@@ -77,8 +83,8 @@ def create_delta_simulation():
     arrow1.color.g = 0.0
     arrow1.color.b = 0.0
     arrow1.points = [None]*2
-    arrow1.points[0] = Point(0.051961524227, 0.0, 0.0)
-    arrow1.points[1] = Point(0.051961524227, 0.0, 0.08)
+    arrow1.points[0] = Point(base1.pose.position.x, base1.pose.position.y, 0.0)
+    arrow1.points[1] = Point(base1.pose.position.x, base1.pose.position.y, 0.08)
     arrow1.pose.orientation.w = 1.0
     arrow1.id = 4
     
@@ -95,8 +101,8 @@ def create_delta_simulation():
     arrow2.color.g = 1.0
     arrow2.color.b = 0.0
     arrow2.points = [None]*2
-    arrow2.points[0] = Point(-0.051961524227, -0.06, 0.0)
-    arrow2.points[1] = Point(-0.051961524227, -0.06, 0.08)
+    arrow2.points[0] = Point(base2.pose.position.x, base2.pose.position.y, 0.0)
+    arrow2.points[1] = Point(base2.pose.position.x, base2.pose.position.y, 0.08)
     arrow2.pose.orientation.w = 1.0
     arrow2.id = 5
     
@@ -112,8 +118,8 @@ def create_delta_simulation():
     arrow3.color.g = 0.0
     arrow3.color.b = 1.0
     arrow3.points = [None]*2
-    arrow3.points[0] = Point(-0.051961524227, 0.06, 0.0)
-    arrow3.points[1] = Point(-0.051961524227, 0.06, 0.08)
+    arrow3.points[0] = Point(base3.pose.position.x, base3.pose.position.y, 0.0)
+    arrow3.points[1] = Point(base3.pose.position.x, base3.pose.position.y, 0.08)
     arrow3.pose.orientation.w = 1.0
     arrow3.id = 6
     
@@ -129,8 +135,9 @@ def create_delta_simulation():
     arrow4.color.g = 0.0
     arrow4.color.b = 0.0
     arrow4.points = [None]*2
-    arrow4.points[0] = Point(0.051961524227, 0.0, 0.08)
-    arrow4.points[1] = Point(0.051961524227, 0.0, 0.2)
+    arrow4.points[0] = arrow1.points[1]
+    arrow4.points[1] = arrow1.points[1]
+    arrow4.points[1].z = arrow4.points[1].z + 0.2 # end to elbow dist
     arrow4.pose.orientation.w = 1.0
     arrow4.id = 7
     
@@ -146,8 +153,9 @@ def create_delta_simulation():
     arrow5.color.g = 1.0
     arrow5.color.b = 0.0
     arrow5.points = [None]*2
-    arrow5.points[0] = Point(-0.051961524227, -0.06, 0.08)
-    arrow5.points[1] = Point(-0.051961524227, -0.06, 0.2)
+    arrow5.points[0] =  arrow2.points[1]
+    arrow5.points[1] =  arrow2.points[1]
+    arrow5.points[1].z =  arrow2.points[1].z + 0.2
     arrow5.pose.orientation.w = 1.0
     arrow5.id = 8
     
@@ -163,8 +171,9 @@ def create_delta_simulation():
     arrow6.color.g = 0.0
     arrow6.color.b = 1.0
     arrow6.points = [None]*2
-    arrow6.points[0] = Point(-0.051961524227, 0.06, 0.08)
-    arrow6.points[1] = Point(-0.051961524227, 0.06, 0.2)
+    arrow6.points[0] = arrow3.points[1]
+    arrow6.points[1] = arrow3.points[1]
+    arrow6.points[1].z = arrow3.points[1].z + 0.2
     arrow6.pose.orientation.w = 1.0
     arrow6.id = 9
     
@@ -183,7 +192,7 @@ def create_delta_simulation():
     floor.color.r = 205.0 / 255.0
     floor.color.g = 133.0 / 255.0
     floor.color.b = 63.0 / 255.0
-    floor.pose.orientation.w = 1.0
+    floor.pose.orientation.w = 1
     floor.pose.position.x = 0
     floor.pose.position.y = 0
     floor.pose.position.z = -width
@@ -209,21 +218,83 @@ def set_initial_delta_pose(markerArray):
     endpoint = Point(0.0, 0.0, 0.150286912)
     for m in markerArray.markers:
         if m.id == 4: # from dyn1 to elbow1
-            m.points[1] = Point(0.051961524227 + 0.08, 0.0, 0.0)
+            m.points[1] = Point(0.0, - 0.06 * sqrt(2) - 0.08, 0.0)
         elif m.id == 5: # from dyn2 to elbow2
-            m.points[1] = Point(-0.051961524227 - 0.056568542, -0.06 - 0.056568542, 0.0)
+            m.points[1] = Point(0.06 + 0.056568542, 0.06 + 0.056568542, 0.0)
         elif m.id == 6: # from dyn3 to elbow3
-            m.points[1] = Point(-0.051961524227 - 0.056568542, 0.06 + 0.056568542, 0.0)
+            m.points[1] = Point(-0.06 - 0.056568542, 0.06 + 0.056568542, 0.0)
         elif m.id == 7: # from elbow1 to end
-            m.points[0] = Point(0.051961524227 + 0.08, 0.0, 0.0)
+            m.points[0] = Point(0.0, - 0.06 * sqrt(2) - 0.08, 0.0)
             m.points[1] = endpoint
         elif m.id == 8: # from elbow2 to end
-            m.points[0] = Point(-0.051961524227 - 0.056568542, -0.06 - 0.056568542, 0.0)
+            m.points[0] = Point(0.06 + 0.056568542, 0.06 + 0.056568542, 0.0)
             m.points[1] = endpoint
         elif m.id == 9: # from elbow3 to end
-            m.points[0] = Point(-0.051961524227 - 0.056568542, 0.06 + 0.056568542, 0.0)
+            m.points[0] = Point(-0.06 - 0.056568542, 0.06 + 0.056568542, 0.0)
             m.points[1] = endpoint
     return markerArray  
         
-        
+     
+def move_simulation_to_point(x, y, z, simulationMarkerArray):
+    endpoint = Point(x, y, z)
+    angles = delta_calcInverse(x, y, z)
+    print angles
+
+
+
+    for m in simulationMarkerArray.markers:
+        if m.id == 4: # from dyn1 to elbow1
+            # For dyn1:
+            pbase = (0.0, - 0.06 * sqrt(2), 0)
+            pfinal = (0.0, - 0.06 * sqrt(2) - 0.08, 0.0)
+            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
+
+            #rotate de the vector over an axis by some angle.
+            e1 = (1,0,0) # over X axis as dyn1 is over Y axis
+            # rotation_matrix( angle, reference axis, point=(optional))
+            M = rotation_matrix(np.radians(angles[1]*-1), e1)
+            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
+            newendpoint = pbase + rotvecarrow
+            # We got the new point
+            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
+            
+        elif m.id == 5: # from dyn2 to elbow2
+            # For dyn2:
+            pbase = (0.06, 0.06, 0.0)
+            pfinal = (0.06 + 0.056568542, 0.06 + 0.056568542, 0.0)
+            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
+            #rotate de the vector over an axis by some angle.
+            e1 = (-1,1,0) # over its needed axis
+            # rotation_matrix( angle, reference axis, point=(optional))
+            M = rotation_matrix(np.radians(angles[2]*-1), e1)
+            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
+            newendpoint = pbase + rotvecarrow
+            # We got the new point
+            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
+            
+
+        elif m.id == 6: # from dyn3 to elbow3
+            # For dyn3:
+            pbase = (- 0.06 , 0.06, 0.0)
+            pfinal = (-0.06 - 0.056568542, 0.06 + 0.056568542, 0.0)
+            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
+            #rotate de the vector over an axis by some angle.
+            e1 = (1,1,0) 
+            # rotation_matrix( angle, reference axis, point=(optional))
+            M = rotation_matrix(np.radians(angles[3]), e1)
+            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
+            newendpoint = pbase + rotvecarrow
+            # We got the new point
+            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
+        elif m.id == 7: # from elbow1 to end
+             m.points[0] = simulationMarkerArray.markers[3].points[1] # index is number -1
+             m.points[1] = endpoint
+        elif m.id == 8: # from elbow2 to end
+             m.points[0] = simulationMarkerArray.markers[4].points[1]
+             m.points[1] = endpoint
+        elif m.id == 9: # from elbow3 to end
+             m.points[0] = simulationMarkerArray.markers[5].points[1]
+             m.points[1] = endpoint
+
+    return simulationMarkerArray   
     

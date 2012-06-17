@@ -5,8 +5,8 @@ from visualization_msgs.msg import MarkerArray
 from geometry_msgs.msg import Point
 from std_msgs.msg import Float64
 import rospy
-import math
-from delta_construct import create_delta_simulation, set_initial_delta_pose
+from math import *
+from delta_construct import create_delta_simulation, set_initial_delta_pose, move_simulation_to_point
 from delta_kinematics import *
 from transformations import *
 import numpy as np
@@ -28,74 +28,68 @@ def move_dynamixels(alpha, beta, theta):
     global pub3
     pub3.publish(Float64(math.radians(theta)))
 
-def move_simulation_to_point(x, y, z, simulationMarkerArray):
-    endpoint = Point(x, y, z)
-    angles = delta_calcInverse(x, y, z)
-    print angles
-
-
-
-    for m in simulationMarkerArray.markers:
-        if m.id == 4: # from dyn1 to elbow1
-            # For dyn1:
-            # 0.051961524227, 0, 0
-            # 0.051961524227 + 0.08, 0.0, 0.0
-            pbase = (0.051961524227, 0, 0)
-            pfinal = (0.051961524227 + 0.08, 0.0, 0.0)
-            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
-
-            #rotate de the vector over an axis by some angle.
-            e1 = (0,1,0) # over Y axis as dyn1 is over X axis
-            # rotation_matrix( angle, reference axis, point=(optional))
-            M = rotation_matrix(np.radians(angles[1]*-1), e1)
-            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
-            newendpoint = pbase + rotvecarrow
-            # We got the new point
-            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
-            
-        elif m.id == 5: # from dyn2 to elbow2
-            # For dyn2:
-            # -0.051961524227, -0.06, 0.0
-            # -0.051961524227 - 0.056568542, -0.06 - 0.056568542, 0.0
-            pbase = (-0.051961524227, -0.06, 0.0)
-            pfinal = (-0.051961524227 - 0.056568542, -0.06 - 0.056568542, 0.0)
-            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
-            #rotate de the vector over an axis by some angle.
-            e1 = (1,-1,0) # over its needed axis
-            # rotation_matrix( angle, reference axis, point=(optional))
-            M = rotation_matrix(np.radians(angles[2]*-1), e1)
-            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
-            newendpoint = pbase + rotvecarrow
-            # We got the new point
-            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
-            
-
-        elif m.id == 6: # from dyn3 to elbow3
-            # For dyn3:
-            # -0.051961524227, 0.06, 0.0
-            # -0.051961524227 - 0.056568542, 0.06 + 0.056568542, 0.0
-            pbase = (-0.051961524227, 0.06, 0.0)
-            pfinal = (-0.051961524227 - 0.056568542, 0.06 + 0.056568542, 0.0)
-            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
-            #rotate de the vector over an axis by some angle.
-            e1 = (1,1,0) 
-            # rotation_matrix( angle, reference axis, point=(optional))
-            M = rotation_matrix(np.radians(angles[3]), e1)
-            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
-            newendpoint = pbase + rotvecarrow
-            # We got the new point
-            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
-        elif m.id == 7: # from elbow1 to end
-             m.points[0] = simulationMarkerArray.markers[3].points[1] # index is number -1
-             m.points[1] = endpoint
-        elif m.id == 8: # from elbow2 to end
-             m.points[0] = simulationMarkerArray.markers[4].points[1]
-             m.points[1] = endpoint
-        elif m.id == 9: # from elbow3 to end
-             m.points[0] = simulationMarkerArray.markers[5].points[1]
-             m.points[1] = endpoint
-
-    return simulationMarkerArray
+#def move_simulation_to_point(x, y, z, simulationMarkerArray):
+#    endpoint = Point(x, y, z)
+#    angles = delta_calcInverse(x, y, z)
+#    print angles
+#
+#
+#
+#    for m in simulationMarkerArray.markers:
+#        if m.id == 4: # from dyn1 to elbow1
+#            # For dyn1:
+#            pbase = (0.0, - 0.06 * sqrt(2), 0)
+#            pfinal = (0.0, - 0.06 * sqrt(2) - 0.08, 0.0)
+#            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
+#
+#            #rotate de the vector over an axis by some angle.
+#            e1 = (1,0,0) # over X axis as dyn1 is over Y axis
+#            # rotation_matrix( angle, reference axis, point=(optional))
+#            M = rotation_matrix(np.radians(angles[1]*-1), e1)
+#            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
+#            newendpoint = pbase + rotvecarrow
+#            # We got the new point
+#            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
+#            
+#        elif m.id == 5: # from dyn2 to elbow2
+#            # For dyn2:
+#            pbase = (0.06, 0.06, 0.0)
+#            pfinal = (0.06 + 0.056568542, 0.06 + 0.056568542, 0.0)
+#            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
+#            #rotate de the vector over an axis by some angle.
+#            e1 = (-1,1,0) # over its needed axis
+#            # rotation_matrix( angle, reference axis, point=(optional))
+#            M = rotation_matrix(np.radians(angles[2]*-1), e1)
+#            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
+#            newendpoint = pbase + rotvecarrow
+#            # We got the new point
+#            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
+#            
+#
+#        elif m.id == 6: # from dyn3 to elbow3
+#            # For dyn3:
+#            pbase = (- 0.06 , 0.06, 0.0)
+#            pfinal = (-0.06 - 0.056568542, 0.06 + 0.056568542, 0.0)
+#            vecarrow = (pfinal[0] - pbase[0], pfinal[1] - pbase[1], pfinal[2] - pbase[2])
+#            #rotate de the vector over an axis by some angle.
+#            e1 = (1,1,0) 
+#            # rotation_matrix( angle, reference axis, point=(optional))
+#            M = rotation_matrix(np.radians(angles[3]), e1)
+#            rotvecarrow = numpy.dot(vecarrow, M[:3,:3].T)
+#            newendpoint = pbase + rotvecarrow
+#            # We got the new point
+#            m.points[1] = Point( newendpoint[0], newendpoint[1], newendpoint[2])
+#        elif m.id == 7: # from elbow1 to end
+#             m.points[0] = simulationMarkerArray.markers[3].points[1] # index is number -1
+#             m.points[1] = endpoint
+#        elif m.id == 8: # from elbow2 to end
+#             m.points[0] = simulationMarkerArray.markers[4].points[1]
+#             m.points[1] = endpoint
+#        elif m.id == 9: # from elbow3 to end
+#             m.points[0] = simulationMarkerArray.markers[5].points[1]
+#             m.points[1] = endpoint
+#
+#    return simulationMarkerArray
 
 topic = 'delta_simulation'
 publisher = rospy.Publisher(topic, MarkerArray)
@@ -249,7 +243,7 @@ try:
              # Publish the MarkerArray
             publisher.publish(initializedMarkerArray)
             rospy.sleep(0.02)
-            
+#            
         theta3 = 1
         while  theta3 < 90 and onlyone:
             print "Setting dynamixel3 to " + str(theta3)
@@ -299,7 +293,7 @@ try:
             
     
         
-        onlyone = False
+        onlyone = True
         publisher.publish(initializedMarkerArray)
     
     

@@ -62,6 +62,7 @@ def delta_calcForward(theta1, theta2, theta3):
     z0 = -0.5*(b+math.sqrt(d))/a
     x0 = (a1*z0 + b1)/dnm
     y0 = (a2*z0 + b2)/dnm
+    # this is x where y and y where x being y negative because our projection is the other way around
     return (0, x0/1000.0, y0/1000.0, z0/1000.0 * -1)  # *-1 to obtain +Z
  
  
@@ -94,7 +95,7 @@ def delta_calcInverse(x0, y0, z0):
      y0 *= 1000.0
      z0 *= 1000.0
      theta1 = theta2 = theta3 = 0.0
-     status = delta_calcAngleYZ(x0, y0, z0)
+     status = delta_calcAngleYZ(x0, y0, z0) 
 
      if status[0] == 0:
          theta1 = status[1] 

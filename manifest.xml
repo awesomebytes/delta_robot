@@ -12,6 +12,7 @@
   <depend package="geometry_msgs" />
   <depend package="std_msgs" />
   <depend package="dynamixel_msgs" />
+  <depend package="tf" />
   <!-- <depend package="python_orocos_kdl" /> -->
 
 </package>
