@@ -8,10 +8,11 @@ import numpy as np
 
 
 
+    # Creates the model of the system
 def create_delta_simulation():
     print "Creating simulation"
     markerArray = MarkerArray()
-    width = 0.005 # 0.005
+    width = 0.005 
     
     
     # Point of first dynamixel
@@ -213,6 +214,10 @@ def create_delta_simulation():
     
     return markerArray
 
+    # This functions sets the initial pose of the model of the robot
+    # You must pass the MarkerArray of the model of the system
+    # hopefully created with: create_delta_simulation()
+    # and it returns the updated model of the system
 def set_initial_delta_pose(markerArray):
     print "Setting initial pose"
     endpoint = Point(0.0, 0.0, 0.150286912)
@@ -234,13 +239,14 @@ def set_initial_delta_pose(markerArray):
             m.points[1] = endpoint
     return markerArray  
         
-     
+     # You must pass the position (should be valid) on (x,y,z) 
+     # and pass on simulationMarkerArray the MarkerArray of the model of the system
+     # hopefully created with: create_delta_simulation()
+     # it returns the updated model of the robot with the new terminal end position
 def move_simulation_to_point(x, y, z, simulationMarkerArray):
     endpoint = Point(x, y, z)
     angles = delta_calcInverse(x, y, z)
     print angles
-
-
 
     for m in simulationMarkerArray.markers:
         if m.id == 4: # from dyn1 to elbow1

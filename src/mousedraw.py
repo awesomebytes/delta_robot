@@ -28,6 +28,8 @@ import cv
 #define CV_EVENT_FLAG_ALTKEY    32
 
 
+# This app opens a blank window to draw a painting in a single stroke
+# when you are finished you must hit Esc to save the points of the trajectory
 class MouseDraw(object):
     def __init__(self):
         cv2.namedWindow('CaptureMouse')
@@ -66,7 +68,7 @@ class MouseDraw(object):
             cv.ShowImage('CaptureMouse', self.image)
 
             ch = cv2.waitKey(30)
-            if ch == 27 or ch == 1310819 or ch == 1048603:
+            if ch == 27 or ch == 1310819 or ch == 1048603: # exit saving when we hit Esc
                 f = open('drawingpointlist.txt', 'w')
                 for i in range(0, len(self.pointlist)):
                     f.write("" + str(self.pointlist[i][0]) + ","  + str(self.pointlist[i][1]) + "\n")
