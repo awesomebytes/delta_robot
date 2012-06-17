@@ -41,7 +41,10 @@ initializedMarkerArray = set_initial_delta_pose(markerArray)
 
 
 try:
-    f = open('drawingpointlist.txt', 'rb')
+    #rospy.sleep(2.0)
+    pkg_path = roslib.packages.get_pkg_dir('delta_robot')
+    file_path = pkg_path + "/src/drawingpointlist.txt" 
+    f = open(file_path, 'rb')
     reader = csv.reader(f)
     idcount = 500
     drawingz = 0.20
